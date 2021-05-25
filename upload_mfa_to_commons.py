@@ -19,7 +19,13 @@ skip_finna_ids = [
 'mfa.07c36efd-7fe4-40fd-956e-10999b00cf19',
 'mfa.08d8439c-6f53-4bdd-94be-009eda861e0e',
 'mfa.0e90699a-6f3a-4a10-ace6-187a71d1be91',
-'mfa.10a511dd-5dae-4ceb-aae3-510fdebf29e1'
+'mfa.10a511dd-5dae-4ceb-aae3-510fdebf29e1',
+'mfa.153f3f6e-dcd2-4a0f-be1f-bddc580368be',
+'mfa.170a8023-868a-4491-82f0-41804f5a6eb8',
+'mfa.1e0dc2f7-d835-4f78-9449-5929c286869f',
+'mfa.1ffa0598-973c-4663-88a8-a821145aa0f2',
+'mfa.22892c91-8ab5-478f-a588-c0a42eb6533b',
+'mfa.23d3ec47-20ca-4148-af3d-50aeb11884ce'
 ]
 
 # Finna author name -> Wikdata id mapping
@@ -27,6 +33,8 @@ authors={
 'Saarinen, Eliel' : 'Q312028',
 'Gesellius, Lindgren & Saarinen' : 'Q2563295',
 'Gesellius & Saarinen' : 'Q98150301',
+'Hård af Segerstad, Karl': 'Q5820266',
+'Gesellius, Herman' : 'Q2562660' # Finnish architect (1874-1916)
 }
 
 # Finna author name -> Creator template mapping
@@ -34,6 +42,8 @@ author_creator_templates={
 'Saarinen, Eliel' : '{{Creator:Eliel Saarinen}}',
 'Gesellius, Lindgren & Saarinen' : '{{Creator:Gesellius, Lindgren & Saarinen}}',
 'Gesellius & Saarinen' : '{{Creator:Gesellius & Saarinen}}',
+'Hård af Segerstad, Karl' : '{{Creator:Karl Hård af Segerstad}}',
+'Gesellius, Herman' : '{{Creator:Herman Gesellius}}' 
 }
 
 # Finna author name -> Commons cat mapping
@@ -41,6 +51,9 @@ author_commonscats={
 'Saarinen, Eliel' : '[[Category:Eliel Saarinen]]',
 'Gesellius, Lindgren & Saarinen' : '[[Category:Gesellius, Lindgren, Saarinen Architects]]',
 'Gesellius & Saarinen' : '[[Category:Gesellius & Saarinen]]',
+'Hård af Segerstad, Karl': '[[Category:Karl Hård af Segerstad]]',
+'Gesellius, Herman' : '[[Category:Herman Gesellius]]' 
+
 }
 
 # Finna role name -> Wikidata id mapping
@@ -91,10 +104,10 @@ def addSDCSource(site, media_identifier, source_of_file, source_url, operator, p
    setMediainfoQualifier(site, media_identifier, claim_id, "P7482", propertyvalue, "P123", qualifiervalue)
 
 
-def addSDCInfo(user, authors, licence, finna_id, image_phash, image_width, image_height, imagehash_version):
+def addSDCInfo(user, authors, licence, finna_id, image_phash, image_width, image_height, imagehash_version, caption):
    logimage=getFileinfoFromEvent(user.last_event, finna_id)
 
-
+   addCaption(site, logimage["mediaitem"], "fi", caption)
 
    if licence == "CC BY 4.0": 
       # P6216 = copyright status
@@ -164,6 +177,47 @@ def setMediainfoQualifier(site, media_identifier, claim_id, property, propertyva
          print("Claim created but there was an unknown problem")
          print(ret)
          exit(1)
+
+   except pywikibot.data.api.APIError as e:
+      print('Got an error from the API, the following request were made:')
+      print(request)
+      print('Error: {}'.format(e))
+      exit(1)
+
+
+
+def addCaption(site, media_identifier, lang, caption):
+#postdata = {u'action' : u'wbeditentity',
+#                    u'format' : u'json',
+#                    u'id' : mediaid,
+#                    u'data' : json.dumps({ u'labels' : labels}),
+#                    u'token' : token,
+#                    u'summary' : summary,
+#                    u'bot' : True,
+#                    }
+
+   captions={}
+   captions["fi"] = {u'language' : 'fi', 'value' : caption }
+   csrf_token = site.tokens['csrf']
+   payload = {
+      'action' : 'wbeditentity',
+      'format' : u'json',
+      'id' : media_identifier,
+      'data' :  json.dumps({ u'labels' : captions}),
+      'token' : csrf_token,
+      'bot' : True, # in case you're using a bot account (which you should)
+   }
+   print(payload)
+   request = site._simple_request(**payload)
+   try:
+      ret=request.submit()
+#      claim=ret.get("claim")
+#      if claim:
+#         return claim.get("id")
+#      else:
+#         print("Claim created but there was an unknown problem")
+#         print(ret)
+#         exit(1)
 
    except pywikibot.data.api.APIError as e:
       print('Got an error from the API, the following request were made:')
@@ -665,7 +719,7 @@ with urllib.request.urlopen(url) as file:
 
           bot.run()
 
-          addSDCInfo(user, out["authors"], out["licence"], out["finna_id"], out["image_phash"], image_width, image_height, imagehash_version)
+          addSDCInfo(user, out["authors"], out["licence"], out["finna_id"], out["image_phash"], image_width, image_height, imagehash_version, out["title"])
 
           exit(1)
 

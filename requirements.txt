@@ -1,0 +1,6 @@
+ImageHash
+numpy
+Pillow
+pywikibot
+requests
+
