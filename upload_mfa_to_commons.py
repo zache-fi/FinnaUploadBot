@@ -1,3 +1,4 @@
+# -*- coding: latin-1 -*-
 import pywikibot
 from pywikibot.specialbots import UploadRobot
 import urllib
@@ -7,8 +8,6 @@ import re
 import requests
 import imagehash
 from PIL import Image
-
-
 
 # Add finna_id's of images already in Commons here
 skip_finna_ids = [
@@ -25,7 +24,8 @@ skip_finna_ids = [
 'mfa.1e0dc2f7-d835-4f78-9449-5929c286869f',
 'mfa.1ffa0598-973c-4663-88a8-a821145aa0f2',
 'mfa.22892c91-8ab5-478f-a588-c0a42eb6533b',
-'mfa.23d3ec47-20ca-4148-af3d-50aeb11884ce'
+'mfa.23d3ec47-20ca-4148-af3d-50aeb11884ce',
+'mfa.2676a520-e564-4eed-8169-97cdf4c60704',
 ]
 
 # Finna author name -> Wikdata id mapping
@@ -76,7 +76,7 @@ def getFileinfoFromEvent(event, finna_id):
    print("get_fileinfo_from_event failed")
    for e in event:
       print(e + "\t" + str(event.get(e)))
-   exit(1)
+   return ""
 
 
 def addSDCPhash(site, media_identifier, phashchecksum, width, height, imagehash_version):
@@ -106,6 +106,9 @@ def addSDCSource(site, media_identifier, source_of_file, source_url, operator, p
 
 def addSDCInfo(user, authors, licence, finna_id, image_phash, image_width, image_height, imagehash_version, caption):
    logimage=getFileinfoFromEvent(user.last_event, finna_id)
+
+   if (logimage==""):
+      return
 
    addCaption(site, logimage["mediaitem"], "fi", caption)
 
@@ -306,7 +309,7 @@ def testSnak(snak, snakvalue):
 
 def getMediainfoClaimId(site, media_identifier, property, propertyvalue="", qualifier="", qualifiervalue="" ):
    claims=getMediainfoClaims(site, media_identifier, property)
-   ṕroperty_found=False
+   property_found=False
    if ('entity-type' in propertyvalue and propertyvalue.get('entity-type')=='item'):
       propertyvalue=propertyvalue.get('id')
 
@@ -721,6 +724,6 @@ with urllib.request.urlopen(url) as file:
 
           addSDCInfo(user, out["authors"], out["licence"], out["finna_id"], out["image_phash"], image_width, image_height, imagehash_version, out["title"])
 
-          exit(1)
+#          exit(1)
 
 
